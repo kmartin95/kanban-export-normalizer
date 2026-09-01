@@ -14,9 +14,9 @@ export and returns the same three types: `Board`, `Column`, `Card`. Write
 your analytics or migration code against that model and it doesn't care
 which tool the data came from.
 
-Only Trello is implemented so far. Jira and Asana parsers are planned (see
-the roadmap below) — they should be a matter of writing a new module that
-produces the same `Board` shape, not changing the model.
+Trello and Jira (CSV export) are implemented so far. Asana and GitHub
+Projects parsers are planned next — they should be a matter of writing a
+new module that produces the same `Board` shape, not changing the model.
 
 ## Install
 
@@ -60,6 +60,22 @@ from kanban_export import parse_trello
 
 board = parse_trello(exported_dict)
 ```
+
+Export issues from Jira (Issues > Export > Export CSV (all fields)) and
+load the file:
+
+```python
+from kanban_export import load_jira_csv_file
+
+board = load_jira_csv_file("my-project.csv")
+
+for column in board.columns:
+    print(f"  {column.name}: {len(column.cards)} cards")
+```
+
+Jira's CSV export has no board-level id or explicit card ordering, so
+`board.id`/`board.name` come from the Project key/name columns, and card
+position within a column falls back to the row order in the export.
 
 ## Data model
 
