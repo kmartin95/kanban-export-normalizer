@@ -14,8 +14,8 @@ export and returns the same three types: `Board`, `Column`, `Card`. Write
 your analytics or migration code against that model and it doesn't care
 which tool the data came from.
 
-Trello and Jira (CSV export) are implemented so far. Asana and GitHub
-Projects parsers are planned next — they should be a matter of writing a
+Trello, Jira (CSV export), and Asana are implemented so far. A GitHub
+Projects parser is planned next — it should be a matter of writing a
 new module that produces the same `Board` shape, not changing the model.
 
 ## Install
@@ -76,6 +76,29 @@ for column in board.columns:
 Jira's CSV export has no board-level id or explicit card ordering, so
 `board.id`/`board.name` come from the Project key/name columns, and card
 position within a column falls back to the row order in the export.
+
+Asana has no bulk "export as JSON" button in the UI, so this parser takes
+the shape you get back from the API: a project (`gid`, `name`), its
+`sections`, and its `tasks` with `memberships` expanded so each task can
+be matched back to a section:
+
+```python
+from kanban_export import parse_asana
+
+board = parse_asana(project_dict)
+```
+
+or from a file you've already saved that response to:
+
+```python
+from kanban_export import load_asana_file
+
+board = load_asana_file("my-project.json")
+```
+
+Like Jira, Asana's API doesn't expose a per-task ordering field, so card
+position within a column falls back to the order tasks appear in the
+`tasks` list.
 
 ## Data model
 
