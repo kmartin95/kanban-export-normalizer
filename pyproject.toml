@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kanban-export-normalizer"
 version = "0.1.0"
-description = "Normalize kanban board exports from Trello, Jira, and Asana into one data model"
+description = "Normalize kanban board exports from Trello, Jira, Asana, and GitHub Projects into one data model"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

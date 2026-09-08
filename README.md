@@ -14,9 +14,8 @@ export and returns the same three types: `Board`, `Column`, `Card`. Write
 your analytics or migration code against that model and it doesn't care
 which tool the data came from.
 
-Trello, Jira (CSV export), and Asana are implemented so far. A GitHub
-Projects parser is planned next — it should be a matter of writing a
-new module that produces the same `Board` shape, not changing the model.
+Trello, Jira (CSV export), Asana, and GitHub Projects are implemented so
+far.
 
 ## Install
 
@@ -99,6 +98,31 @@ board = load_asana_file("my-project.json")
 Like Jira, Asana's API doesn't expose a per-task ordering field, so card
 position within a column falls back to the order tasks appear in the
 `tasks` list.
+
+GitHub Projects (the v2 kind, at org or user level) also has no export
+button — pull it via the GraphQL API's `projectV2` query, with `fields`
+and `items` (including `fieldValues` and `content`) expanded, and pass the
+resulting project object straight in:
+
+```python
+from kanban_export import parse_github_project
+
+board = parse_github_project(project_dict)
+```
+
+or from a saved copy of that response:
+
+```python
+from kanban_export import load_github_project_file
+
+board = load_github_project_file("my-project.json")
+```
+
+Columns come from the project's "Status" single-select field (or its
+first single-select field, if none is named "Status") — GitHub Projects
+has no dedicated column concept, just whichever field a board view groups
+by, and "Status" is the near-universal convention. Card position falls
+back to item order, same as Jira and Asana.
 
 ## Data model
 
