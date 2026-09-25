@@ -20,6 +20,7 @@ since there's no column to place them in.
 import json
 from pathlib import Path
 
+from ._dates import parse_iso_datetime
 from .model import Board, Card, Column
 
 
@@ -65,6 +66,8 @@ def parse_asana(data: dict) -> Board:
                 if tag.get("name")
             ],
             closed=raw_task.get("completed", False),
+            created_at=parse_iso_datetime(raw_task.get("created_at") or ""),
+            closed_at=parse_iso_datetime(raw_task.get("completed_at") or ""),
         )
         column.cards.append(card)
 

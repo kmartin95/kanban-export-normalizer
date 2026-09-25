@@ -131,11 +131,13 @@ back to item order, same as Jira and Asana.
 class Card:
     id: str
     title: str
-    column: str          # name of the column the card currently sits in
-    position: float       # the tool's own ordering value within the column
+    column: str            # name of the column the card currently sits in
+    position: float        # the tool's own ordering value within the column
     description: str
     labels: list[str]
-    closed: bool           # archived/done, depending on the source tool
+    closed: bool            # archived/done, depending on the source tool
+    created_at: datetime | None
+    closed_at: datetime | None
 
 @dataclass
 class Column:
@@ -150,6 +152,33 @@ class Board:
     name: str
     columns: list[Column]
 ```
+
+`created_at`/`closed_at` are best-effort: Trello's export has no explicit
+creation timestamp, so it's decoded from the card id (a Mongo ObjectId)
+instead, and Trello has no closed_at at all since archiving isn't
+timestamped in the export. Jira's CSV dates are parsed from whatever
+format the exporting user's locale produced, and fall back to `None`
+rather than a guess if none of the known formats match.
+
+## Metrics
+
+`kanban_export.metrics` computes lead time - the full time a card was
+open, from creation to completion - from those two fields:
+
+```python
+from kanban_export import average_lead_time, average_lead_time_by_column, lead_time
+
+closed_cards = [card for card in board.all_cards() if card.closed]
+for card in closed_cards:
+    print(card.title, lead_time(card))
+
+print("average:", average_lead_time(closed_cards))
+print("by column:", average_lead_time_by_column(board))
+```
+
+This is lead time, not cycle time: none of the four export formats record
+when a card entered a given column, only which column it's in now, so
+there's no "work started" timestamp to measure cycle time from.
 
 ## License
 

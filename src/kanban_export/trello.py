@@ -4,12 +4,27 @@ Trello's export is a flat structure: a board has a `lists` array and a
 separate `cards` array where each card points back at its list via `idList`.
 We rebuild the nesting here and drop archived (`closed`) lists, since an
 archived list's cards usually aren't meant to count toward the live board.
+
+The export has no explicit "card created" field, but Trello card ids are
+Mongo ObjectIds, whose first 4 bytes are the creation time - so we decode
+that instead of leaving created_at empty. There's no equivalent trick for
+when a card was archived, so closed_at stays None for every Trello card.
 """
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 from .model import Board, Card, Column
+
+
+def _created_at_from_object_id(object_id: str) -> Optional[datetime]:
+    try:
+        seconds = int(object_id[:8], 16)
+    except ValueError:
+        return None
+    return datetime.fromtimestamp(seconds, tz=timezone.utc)
 
 
 def parse_trello(data: dict) -> Board:
@@ -43,6 +58,7 @@ def parse_trello(data: dict) -> Board:
                 if label.get("name")
             ],
             closed=raw_card.get("closed", False),
+            created_at=_created_at_from_object_id(raw_card["id"]),
         )
         column.cards.append(card)
 

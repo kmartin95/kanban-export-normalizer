@@ -17,12 +17,18 @@ order, since a CSV export doesn't carry one.
 "Closed" is inferred from the Resolution field being set, which is the
 usual Jira convention: an issue gets a resolution when it's resolved,
 regardless of which status name a project used for its closed state.
+
+The Created/Resolved columns are formatted according to the exporting
+user's locale, not a fixed format, so parse_jira_datetime tries the
+handful of formats Jira commonly uses and leaves the field as None if
+none of them match rather than guessing wrong.
 """
 
 import csv
 from pathlib import Path
 from typing import Iterable
 
+from ._dates import parse_jira_datetime
 from .model import Board, Card, Column
 
 
@@ -94,6 +100,8 @@ def parse_jira_csv(text: str) -> Board:
             description=_first(row.get("Description", [])),
             labels=row.get("Labels", []),
             closed=bool(_first(row.get("Resolution", []))),
+            created_at=parse_jira_datetime(_first(row.get("Created", []))),
+            closed_at=parse_jira_datetime(_first(row.get("Resolved", []))),
         )
         column.cards.append(card)
 

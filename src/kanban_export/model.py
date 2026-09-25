@@ -1,6 +1,7 @@
 """Common data model that every board-specific parser normalizes into."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Iterator, Optional
 
 
@@ -13,6 +14,10 @@ class Card:
     description: str = ""
     labels: list[str] = field(default_factory=list)
     closed: bool = False
+    # Not every export carries both of these - a parser leaves whichever
+    # one its source format doesn't provide as None.
+    created_at: Optional[datetime] = None
+    closed_at: Optional[datetime] = None
 
 
 @dataclass

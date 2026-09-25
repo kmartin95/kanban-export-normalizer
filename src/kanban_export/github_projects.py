@@ -21,12 +21,17 @@ same shape problem the Asana parser has with section membership.
 it can be missing entirely (the underlying issue/PR was deleted after
 being added to the project); those items are dropped. Draft issues have
 no `closed` or `labels` field, so both default to their empty values.
+
+Include `createdAt` and `closedAt` on `content` in the GraphQL query if
+you want cards to carry timestamps - draft issues have `createdAt` but no
+`closedAt`, so that one is left None for them.
 """
 
 import json
 from pathlib import Path
 from typing import Optional
 
+from ._dates import parse_iso_datetime
 from .model import Board, Card, Column
 
 
@@ -85,6 +90,8 @@ def parse_github_project(data: dict) -> Board:
                     if label.get("name")
                 ],
                 closed=content.get("closed", False),
+                created_at=parse_iso_datetime(content.get("createdAt") or ""),
+                closed_at=parse_iso_datetime(content.get("closedAt") or ""),
             )
             column.cards.append(card)
 
